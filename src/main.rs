@@ -11,9 +11,9 @@ use tui::{
     Terminal,
 };
 
-struct AppState {
-    pwd: String,
-    items: Vec<String>,
+struct AppState<'a> {
+    pwd: &'a str,
+    items: Vec<&'a str>,
     selected: usize,
 }
 
@@ -25,6 +25,12 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    // TODO: implement (#2)
+    let mut app = AppState {
+        pwd: "/home/samy/",
+        items: vec!["/home/samy/libs/", "/home/samy/images/"],
+        selected: 0,
+    };
     /* Working */
 
     terminal.draw(|f| {
