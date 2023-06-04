@@ -8,13 +8,19 @@ use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     widgets::{Block, Borders, Widget},
-    Terminal,
+    Frame, Terminal,
 };
 
 struct AppState<'a> {
     pwd: &'a str,
     items: Vec<&'a str>,
     selected: usize,
+}
+
+fn draw_app(f: &mut Frame<CrosstermBackend<io::Stdout>>, app: &AppState) {
+    let size = f.size();
+    let block = Block::default().title("Block").borders(Borders::ALL);
+    f.render_widget(block, size);
 }
 
 fn main() -> Result<(), io::Error> {
@@ -33,11 +39,7 @@ fn main() -> Result<(), io::Error> {
     };
     /* Working */
 
-    terminal.draw(|f| {
-        let size = f.size();
-        let block = Block::default().title("Block").borders(Borders::ALL);
-        f.render_widget(block, size);
-    })?;
+    terminal.draw(|f| draw_app(f, &app))?;
 
     thread::sleep(Duration::from_millis(5000));
 
