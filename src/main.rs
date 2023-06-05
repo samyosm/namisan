@@ -1,3 +1,8 @@
+mod app;
+mod app_draw;
+mod app_update;
+
+use app::{AppCommand, AppState};
 use crossterm::{
     event::{
         self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
@@ -6,40 +11,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use std::io;
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders},
-    Frame, Terminal,
-};
-
-struct AppState<'a> {
-    pwd: &'a str,
-    items: Vec<&'a str>,
-    selected: usize,
-}
-
-impl AppState<'_> {
-    fn draw_app(&self, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
-        let size = f.size();
-        let block = Block::default().title(self.pwd).borders(Borders::ALL);
-        f.render_widget(block, size);
-    }
-
-    fn update_app(&mut self, event: &KeyEvent) -> Option<AppCommand> {
-        match event.code {
-            KeyCode::Char('p') => {
-                self.pwd = "Hello, world!";
-            }
-            KeyCode::Char('q') => return Some(AppCommand::Quit),
-            _ => {}
-        }
-        None
-    }
-}
-
-enum AppCommand {
-    Quit,
-}
+use tui::{backend::CrosstermBackend, Terminal};
 
 fn read_event() -> KeyEvent {
     loop {
@@ -65,19 +37,18 @@ fn main() -> Result<(), io::Error> {
     };
 
     /* Working */
-
     terminal.draw(|f| app.draw_app(f))?;
 
+    // Note: this draws the UI only after recieving an input
     loop {
         let event = read_event();
         if event.code == KeyCode::Char('c') && event.modifiers == KeyModifiers::CONTROL {
             break;
         }
 
-        if let Some(command) = app.update_app(&event) {
-            match command {
-                AppCommand::Quit => break,
-            }
+        match app.update_app(&event) {
+            AppCommand::Quit => break,
+            AppCommand::None => {}
         }
 
         terminal.draw(|f| app.draw_app(f))?;
