@@ -10,7 +10,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::io;
+use std::{env, io};
 use tui::{backend::CrosstermBackend, Terminal};
 
 fn read_event() -> KeyEvent {
@@ -30,12 +30,8 @@ fn main() -> Result<(), io::Error> {
     let mut terminal = Terminal::new(backend)?;
 
     // TODO: implement (#2)
-    let mut app = AppState {
-        pwd: "/home/samy/",
-        items: vec!["/home/samy/libs/", "/home/samy/images/"],
-        selected: 0,
-    };
-
+    let pwd = env::current_dir().expect("couldn't fetch current directory path");
+    let mut app = AppState::new(pwd);
     /* Working */
     terminal.draw(|f| app.draw_app(f))?;
 
