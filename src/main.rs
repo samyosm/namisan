@@ -1,13 +1,14 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::{io, thread, time::Duration};
+use std::io;
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders, Widget},
+    widgets::{Block, Borders},
     Frame, Terminal,
 };
 
@@ -17,10 +18,27 @@ struct AppState<'a> {
     selected: usize,
 }
 
-fn draw_app(f: &mut Frame<CrosstermBackend<io::Stdout>>, app: &AppState) {
-    let size = f.size();
-    let block = Block::default().title("Block").borders(Borders::ALL);
-    f.render_widget(block, size);
+impl AppState<'_> {
+    fn draw_app(&self, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
+        let size = f.size();
+        let block = Block::default().title(self.pwd).borders(Borders::ALL);
+        f.render_widget(block, size);
+    }
+
+    fn update_app(&mut self, event: &KeyEvent) -> Option<AppCommand> {
+        match event.code {
+            KeyCode::Char('p') => {
+                self.pwd = "Hello, world!";
+            }
+            KeyCode::Char('q') => return Some(AppCommand::Quit),
+            _ => {}
+        }
+        None
+    }
+}
+
+enum AppCommand {
+    Quit,
 }
 
 fn read_event() -> KeyEvent {
@@ -45,14 +63,25 @@ fn main() -> Result<(), io::Error> {
         items: vec!["/home/samy/libs/", "/home/samy/images/"],
         selected: 0,
     };
+
     /* Working */
 
-    terminal.draw(|f| draw_app(f, &app))?;
+    terminal.draw(|f| app.draw_app(f))?;
 
-    // TODO:
-    // 1. Create read_event loop like during test
-    // 2. Send events to `update_app`
-    // 3. Create an outer loop with `draw_app` and `update_app`
+    loop {
+        let event = read_event();
+        if event.code == KeyCode::Char('c') && event.modifiers == KeyModifiers::CONTROL {
+            break;
+        }
+
+        if let Some(command) = app.update_app(&event) {
+            match command {
+                AppCommand::Quit => break,
+            }
+        }
+
+        terminal.draw(|f| app.draw_app(f))?;
+    }
 
     /* Preparing to quit */
     disable_raw_mode()?;
