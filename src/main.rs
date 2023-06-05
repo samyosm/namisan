@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -23,6 +23,14 @@ fn draw_app(f: &mut Frame<CrosstermBackend<io::Stdout>>, app: &AppState) {
     f.render_widget(block, size);
 }
 
+fn read_event() -> KeyEvent {
+    loop {
+        if let Ok(Event::Key(event)) = event::read() {
+            return event;
+        }
+    }
+}
+
 fn main() -> Result<(), io::Error> {
     /* Initializing app */
     enable_raw_mode()?;
@@ -41,7 +49,10 @@ fn main() -> Result<(), io::Error> {
 
     terminal.draw(|f| draw_app(f, &app))?;
 
-    thread::sleep(Duration::from_millis(5000));
+    // TODO:
+    // 1. Create read_event loop like during test
+    // 2. Send events to `update_app`
+    // 3. Create an outer loop with `draw_app` and `update_app`
 
     /* Preparing to quit */
     disable_raw_mode()?;
