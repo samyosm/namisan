@@ -8,7 +8,7 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Widget},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph},
     Frame,
 };
 
@@ -16,10 +16,33 @@ use crate::app::AppState;
 
 pub fn draw_app(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
     let size = f.size();
+
+    let view = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
+        .split(size);
+
+    draw_header(app, f, view[0]);
+    draw_body(app, f, view[1]);
+}
+
+fn draw_header(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
+    let preview_block = Block::default()
+        //TODO: Style the filename
+        .title("Current working directory")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Gray))
+        .border_type(BorderType::Rounded);
+
+    let paragraph = Paragraph::new(app.pwd().to_str().unwrap()).block(preview_block);
+    f.render_widget(paragraph, area)
+}
+
+fn draw_body(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
     let view = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
-        .split(size);
+        .split(area);
 
     draw_entry_tree(app, f, view[0]);
     draw_preview(app, f, view[1]);
@@ -33,6 +56,7 @@ fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, are
         //TODO: Style the filename
         .title(format!("Previewing {preview_filename}"))
         .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Blue))
         .border_type(BorderType::Rounded);
 
     if preview_entry.is_dir() {

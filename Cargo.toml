@@ -2,6 +2,11 @@
 name = "namisan"
 version = "0.1.0"
 edition = "2021"
+authors = ["samyosm <samy.osmium@gmail.com>"]
+repositry = "https://github.com/samyosm/namisan"
+license = "MIT"
+readme = "README.md"
+description = "A TUI to easily navigate files"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
