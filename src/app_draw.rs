@@ -36,24 +36,19 @@ fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, are
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let mut buffer = String::new();
-
     if preview_entry.is_dir() {
         let items = list_dir_entries(preview_entry);
 
-        let list = List::new(items).block(preview_block).highlight_style(
-            Style::default()
-                .fg(Color::Blue)
-                .bg(Color::DarkGray)
-                .add_modifier(Modifier::BOLD),
-        );
+        let list = List::new(items).block(preview_block);
 
         f.render_widget(list, area);
     } else {
         let mut file = File::open(preview_entry).expect("couldn't open entry");
-        file.read_to_string(&mut buffer)
-            .expect("couldn't read file to string");
-        let paragraph = Paragraph::new(buffer).block(preview_block);
+        let mut vec_buf = Vec::new();
+        file.read_to_end(&mut vec_buf)
+            .expect("couldn't read file content");
+        let text = String::from_utf8_lossy(&vec_buf);
+        let paragraph = Paragraph::new(text).block(preview_block);
         f.render_widget(paragraph, area)
     }
 }
