@@ -2,9 +2,9 @@ use std::io;
 
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Widget},
     Frame,
 };
 
@@ -17,6 +17,18 @@ pub fn draw_app(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
         .split(size);
 
+    draw_entry_tree(app, f, view[0]);
+    draw_preview(app, f, view[1]);
+}
+
+fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
+    let preview_block = Block::default()
+        .title("Preview")
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded);
+    f.render_widget(preview_block, area)
+}
+fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
     let entry_tree_block = Block::default()
         .title("Entry Tree")
         .borders(Borders::ALL)
@@ -47,5 +59,5 @@ pub fn draw_app(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
     let mut state = ListState::default();
     state.select(Some(app.selected));
 
-    f.render_stateful_widget(list, view[0], &mut state);
+    f.render_stateful_widget(list, area, &mut state);
 }
