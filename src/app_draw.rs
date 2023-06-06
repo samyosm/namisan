@@ -1,6 +1,8 @@
 use std::{
-    fs::{self, File},
+    fs::{self, File, ReadDir},
     io::{self, Read},
+    iter::Enumerate,
+    path::Path,
 };
 
 use ratatui::{
@@ -37,16 +39,25 @@ fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, are
     let mut buffer = String::new();
 
     if preview_entry.is_dir() {
-        // TODO
+        let items = list_dir_entries(preview_entry);
+
+        let list = List::new(items).block(preview_block).highlight_style(
+            Style::default()
+                .fg(Color::Blue)
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
+
+        f.render_widget(list, area);
     } else {
         let mut file = File::open(preview_entry).expect("couldn't open entry");
         file.read_to_string(&mut buffer)
             .expect("couldn't read file to string");
+        let paragraph = Paragraph::new(buffer).block(preview_block);
+        f.render_widget(paragraph, area)
     }
-    let paragraph = Paragraph::new(buffer).block(preview_block);
-
-    f.render_widget(paragraph, area)
 }
+
 fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
     let entry_tree_block = Block::default()
         .title("Entry Tree")
@@ -79,4 +90,22 @@ fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, 
     state.select(Some(app.selected));
 
     f.render_stateful_widget(list, area, &mut state);
+}
+
+fn list_dir_entries(dir: &Path) -> Vec<ListItem> {
+    let open_dir = fs::read_dir(dir).expect("coulnd't open directory");
+
+    let items: Vec<ListItem> = open_dir
+        .enumerate()
+        .map(|(_, entry)| {
+            let entry = entry.expect("couldn't get entry").path();
+            let filename = entry.file_name().unwrap().to_str().unwrap();
+            let icon = match entry.is_dir() {
+                true => "󰉋",
+                false => "󰈚",
+            };
+            ListItem::new(format!("{icon} {filename}"))
+        })
+        .collect();
+    items
 }
