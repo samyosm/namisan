@@ -11,7 +11,7 @@ use crate::{app_draw, app_update};
 pub struct AppState {
     pwd: PathBuf,
     entries: Vec<PathBuf>,
-    selected: usize,
+    pub selected: usize,
 }
 
 impl AppState {
@@ -49,10 +49,6 @@ impl AppState {
     /* Getters */
     pub fn pwd(&self) -> &PathBuf {
         &self.pwd
-    }
-
-    pub fn selected(&self) -> usize {
-        self.selected
     }
 
     pub fn entries(&self) -> &Vec<PathBuf> {
