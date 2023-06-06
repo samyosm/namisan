@@ -1,10 +1,13 @@
-use std::io;
+use std::{
+    fs::{self, File},
+    io::{self, Read},
+};
 
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Widget},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Widget},
     Frame,
 };
 
@@ -22,11 +25,27 @@ pub fn draw_app(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
 }
 
 fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
+    let preview_entry = app.entries().get(app.selected).unwrap();
+    let preview_filename = preview_entry.file_name().unwrap().to_str().unwrap();
+
     let preview_block = Block::default()
-        .title("Preview")
+        //TODO: Style the filename
+        .title(format!("Previewing {preview_filename}"))
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
-    f.render_widget(preview_block, area)
+
+    let mut buffer = String::new();
+
+    if preview_entry.is_dir() {
+        // TODO
+    } else {
+        let mut file = File::open(preview_entry).expect("couldn't open entry");
+        file.read_to_string(&mut buffer)
+            .expect("couldn't read file to string");
+    }
+    let paragraph = Paragraph::new(buffer).block(preview_block);
+
+    f.render_widget(paragraph, area)
 }
 fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
     let entry_tree_block = Block::default()
