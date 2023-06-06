@@ -20,6 +20,15 @@ pub fn update_app(app: &mut AppState, event: &KeyEvent) -> AppCommand {
                 app.selected += 1;
             }
         }
+        KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => {
+            let new_path = app.entries().get(app.selected).unwrap();
+            if new_path.is_dir() {
+                app.change_pwd(new_path.to_path_buf());
+            }
+        }
+        KeyCode::Backspace | KeyCode::Left | KeyCode::Char('h') => {
+            app.change_pwd(app.pwd().parent().unwrap().to_path_buf());
+        }
         KeyCode::Char('q') => return AppCommand::Quit,
         _ => {}
     }
