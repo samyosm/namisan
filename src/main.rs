@@ -11,7 +11,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
-use std::{env, io};
+use std::{env, io, process::Command};
 
 fn read_event() -> KeyEvent {
     loop {
@@ -29,7 +29,6 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // TODO: implement (#2)
     let pwd = env::current_dir().expect("couldn't fetch current directory path");
     let mut app = AppState::new(pwd);
     /* Working */
@@ -44,6 +43,31 @@ fn main() -> Result<(), io::Error> {
 
         match app.update_app(&event) {
             AppCommand::Quit => break,
+            AppCommand::Clear => {
+                terminal.flush().expect("couldn't clear the terminal");
+                terminal.clear().expect("couldn't clear the terminal");
+            }
+            AppCommand::XDG(path) => {
+                disable_raw_mode()?;
+                execute!(
+                    terminal.backend_mut(),
+                    LeaveAlternateScreen,
+                    DisableMouseCapture
+                )?;
+                terminal.show_cursor()?;
+
+                Command::new("xdg-open")
+                    .arg(path)
+                    .status()
+                    .expect("couldn't open file");
+
+                terminal.flush().expect("couldn't clear the terminal");
+                terminal.clear().expect("couldn't clear the terminal");
+
+                let mut stdout = io::stdout();
+                enable_raw_mode()?;
+                execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+            }
             AppCommand::None => {}
         }
 

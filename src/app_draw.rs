@@ -1,7 +1,6 @@
 use std::{
     fs::{self, File, ReadDir},
     io::{self, Read},
-    iter::Enumerate,
     path::Path,
 };
 
@@ -43,9 +42,10 @@ fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, are
 
         f.render_widget(list, area);
     } else {
-        let mut file = File::open(preview_entry).expect("couldn't open entry");
+        let file = File::open(preview_entry).expect("couldn't open entry");
         let mut vec_buf = Vec::new();
-        file.read_to_end(&mut vec_buf)
+        file.take((area.bottom() * area.left()).into())
+            .read_to_end(&mut vec_buf)
             .expect("couldn't read file content");
         let text = String::from_utf8_lossy(&vec_buf);
         let paragraph = Paragraph::new(text).block(preview_block);

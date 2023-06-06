@@ -58,5 +58,7 @@ impl AppState {
 
 pub enum AppCommand {
     Quit,
+    Clear,
+    XDG(String),
     None,
 }

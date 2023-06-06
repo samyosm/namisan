@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, process::Command};
 
 use crossterm::event::{KeyCode, KeyEvent};
 
@@ -24,6 +24,8 @@ pub fn update_app(app: &mut AppState, event: &KeyEvent) -> AppCommand {
             let new_path = app.entries().get(app.selected).unwrap();
             if new_path.is_dir() {
                 app.change_pwd(new_path.to_path_buf());
+            } else {
+                return AppCommand::XDG(new_path.to_str().unwrap().to_string());
             }
         }
         KeyCode::Backspace | KeyCode::Left | KeyCode::Char('h') => {
