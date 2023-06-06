@@ -4,7 +4,7 @@ use std::{
 };
 
 use crossterm::event::KeyEvent;
-use tui::{backend::CrosstermBackend, Frame};
+use ratatui::{backend::CrosstermBackend, Frame};
 
 use crate::{app_draw, app_update};
 

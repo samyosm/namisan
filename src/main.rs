@@ -10,8 +10,8 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{env, io};
-use tui::{backend::CrosstermBackend, Terminal};
 
 fn read_event() -> KeyEvent {
     loop {
