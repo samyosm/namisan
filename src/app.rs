@@ -16,13 +16,19 @@ pub struct AppState {
 
 impl AppState {
     fn fetch_entries(path: &PathBuf) -> Vec<PathBuf> {
-        path.read_dir()
+        let mut entries: Vec<PathBuf> = path
+            .read_dir()
             .expect("couldn't read directory")
             .map(|entry| {
                 let entry = entry.expect("couldn't fetch entry");
                 entry.path()
             })
-            .collect()
+            .collect();
+
+        entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+        entries.sort_by(|a, b| a.is_file().cmp(&b.is_file()));
+
+        entries
     }
 
     pub fn new(pwd: PathBuf) -> Self {
