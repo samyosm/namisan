@@ -1,7 +1,7 @@
 use std::{
     fs::{self, File, ReadDir},
     io::{self, Read},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use ratatui::{
@@ -83,8 +83,11 @@ fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, 
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let items: Vec<ListItem> = app
-        .entries()
+    let entries = &mut app.entries().clone();
+    entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+    entries.sort_by(|a, b| a.is_file().cmp(&b.is_file()));
+
+    let items: Vec<ListItem> = entries
         .iter()
         .enumerate()
         .map(|(_, entry)| {
