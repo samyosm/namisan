@@ -1,6 +1,7 @@
 mod app;
 mod app_draw;
 mod app_update;
+mod metadata;
 
 use app::{AppCommand, AppState};
 use crossterm::{

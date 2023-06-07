@@ -6,13 +6,13 @@ use std::{
 
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState, Padding, Paragraph},
     Frame,
 };
 
-use crate::app::AppState;
+use crate::{app::AppState, metadata::Metadata};
 
 pub fn draw_app(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>) {
     let size = f.size();
@@ -45,28 +45,53 @@ fn draw_body(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: 
         .split(area);
 
     draw_entry_tree(app, f, view[0]);
-    draw_preview(app, f, view[1]);
+    draw_entry_info(app, f, view[1]);
 }
 
-fn draw_preview(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
-    let preview_entry = app.entries().get(app.selected).unwrap();
-    let preview_filename = preview_entry.file_name().unwrap().to_str().unwrap();
+fn draw_entry_info(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: Rect) {
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(25), Constraint::Percentage(75)])
+        .split(area);
+
+    let entry = app.entries().get(app.selected).unwrap();
+    draw_metadata(f, entry, layout[0]);
+    draw_preview(f, entry, layout[1]);
+}
+
+fn draw_metadata(f: &mut Frame<CrosstermBackend<io::Stdout>>, entry: &PathBuf, area: Rect) {
+    let metadata = Metadata::new(entry);
 
     let preview_block = Block::default()
         //TODO: Style the filename
-        .title(format!("Previewing {preview_filename}"))
+        .title(format!("Metadata"))
+        .padding(Padding::new(1, 1, 0, 0))
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Blue))
         .border_type(BorderType::Rounded);
 
-    if preview_entry.is_dir() {
-        let items = list_dir_entries(preview_entry);
+    let paragraph = Paragraph::new(metadata.display()).block(preview_block);
+    f.render_widget(paragraph, area)
+}
+
+fn draw_preview(f: &mut Frame<CrosstermBackend<io::Stdout>>, entry: &PathBuf, area: Rect) {
+    let preview_filename = entry.file_name().unwrap().to_str().unwrap();
+    let preview_block = Block::default()
+        //TODO: Style the filename
+        .title(format!("Previewing {preview_filename}"))
+        .padding(Padding::new(1, 1, 0, 0))
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Blue))
+        .border_type(BorderType::Rounded);
+
+    if entry.is_dir() {
+        let items = list_dir_entries(entry);
 
         let list = List::new(items).block(preview_block);
 
         f.render_widget(list, area);
     } else {
-        let file = File::open(preview_entry).expect("couldn't open entry");
+        let file = File::open(entry).expect("couldn't open entry");
         let mut vec_buf = Vec::new();
         file.take((area.bottom() * area.left()).into())
             .read_to_end(&mut vec_buf)
@@ -83,11 +108,8 @@ fn draw_entry_tree(app: &AppState, f: &mut Frame<CrosstermBackend<io::Stdout>>, 
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let entries = &mut app.entries().clone();
-    entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
-    entries.sort_by(|a, b| a.is_file().cmp(&b.is_file()));
-
-    let items: Vec<ListItem> = entries
+    let items: Vec<ListItem> = app
+        .entries()
         .iter()
         .enumerate()
         .map(|(_, entry)| {
